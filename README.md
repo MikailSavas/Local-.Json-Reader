@@ -53,6 +53,10 @@ A native MacOS desktop application to read and display local JSON files with a b
 ## Usage
 
 Run the application:
+Easily open from your applications folder
+
+OR 
+
 ```bash
 swift run
 ```
