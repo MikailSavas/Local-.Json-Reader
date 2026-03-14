@@ -7,9 +7,12 @@ struct ContentView: View {
     @State private var errorMessage: String? = nil
     @State private var showingError = false
     @State private var searchQuery = ""
+    @State private var expandedPaths = Set<String>()
+    @State private var selectedPath: String? = nil
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 0) {
+            // Top toolbar
             HStack {
                 Button(action: {
                     showingFilePicker = true
@@ -33,6 +36,8 @@ struct ContentView: View {
                         Button(action: {
                             jsonData = nil
                             searchQuery = ""
+                            expandedPaths.removeAll()
+                            selectedPath = nil
                         }) {
                             Label("Clear", systemImage: "trash")
                                 .foregroundColor(.red)
@@ -42,13 +47,53 @@ struct ContentView: View {
                 }
             }
             .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(Color(.windowBackgroundColor))
             
+            // Main content
             if let data = jsonData {
-                ScrollView {
-                    JsonView(data: data, searchQuery: searchQuery)
-                        .padding(.horizontal)
+                HSplitView {
+                    // Sidebar
+                    VStack(alignment: .leading) {
+                        Text("JSON Structure")
+                            .font(.headline)
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                        
+                        ScrollView {
+                            SidebarView(
+                                data: data,
+                                searchQuery: searchQuery,
+                                expandedPaths: $expandedPaths,
+                                selectedPath: $selectedPath
+                            )
+                            .padding(.horizontal)
+                        }
+                    }
+                    .frame(minWidth: 250, maxWidth: 400)
+                    .background(Color(.controlBackgroundColor))
+                    
+                    // Main content area
+                    VStack(alignment: .leading) {
+                        if let selectedPath = selectedPath {
+                            Text("Selected: \(selectedPath)")
+                                .font(.subheadline)
+                                .padding(.horizontal)
+                                .padding(.top, 8)
+                        }
+                        
+                        ScrollView {
+                            JsonView(
+                                data: data,
+                                searchQuery: searchQuery,
+                                expandedPaths: $expandedPaths,
+                                selectedPath: $selectedPath
+                            )
+                            .padding(.horizontal)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 VStack {
                     Image(systemName: "doc.text.magnifyingglass")
@@ -63,8 +108,7 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .frame(minWidth: 700, minHeight: 500)
-        .padding()
+        .frame(minWidth: 900, minHeight: 600)
         .fileImporter(
             isPresented: $showingFilePicker,
             allowedContentTypes: [UTType.json]
@@ -84,6 +128,9 @@ struct ContentView: View {
                 dismissButton: .default(Text("OK"))
             )
         }
+        .onChange(of: searchQuery) { newValue in
+            updateExpansionForSearch()
+        }
     }
     
     private func loadJson(from url: URL) {
@@ -91,6 +138,9 @@ struct ContentView: View {
             let data = try Data(contentsOf: url)
             jsonData = try JSONSerialization.jsonObject(with: data)
             errorMessage = nil
+            expandedPaths.removeAll()
+            selectedPath = nil
+            searchQuery = ""
         } catch let decodingError as DecodingError {
             errorMessage = "Invalid JSON format: \(decodingError.localizedDescription)"
             showingError = true
@@ -99,20 +149,265 @@ struct ContentView: View {
             showingError = true
         }
     }
+    
+    private func updateExpansionForSearch() {
+        guard let data = jsonData, !searchQuery.isEmpty else {
+            if searchQuery.isEmpty {
+                expandedPaths.removeAll()
+            }
+            return
+        }
+        
+        var pathsToExpand = Set<String>()
+        findMatchingPaths(in: data, currentPath: "", pathsToExpand: &pathsToExpand)
+        expandedPaths = pathsToExpand
+    }
+    
+    private func findMatchingPaths(in data: Any, currentPath: String, pathsToExpand: inout Set<String>) {
+        if let dict = data as? [String: Any] {
+            for (key, value) in dict {
+                let keyPath = currentPath.isEmpty ? key : "\(currentPath).\(key)"
+                
+                // Check if key matches search
+                if key.lowercased().contains(searchQuery.lowercased()) {
+                    // Expand all parent paths
+                    let pathComponents = keyPath.split(separator: ".")
+                    for i in 0..<pathComponents.count {
+                        let partialPath = pathComponents[0...i].joined(separator: ".")
+                        pathsToExpand.insert(partialPath)
+                    }
+                }
+                
+                // Check if string value matches search
+                if let stringValue = value as? String,
+                   stringValue.lowercased().contains(searchQuery.lowercased()) {
+                    // Expand all parent paths
+                    let pathComponents = keyPath.split(separator: ".")
+                    for i in 0..<pathComponents.count {
+                        let partialPath = pathComponents[0...i].joined(separator: ".")
+                        pathsToExpand.insert(partialPath)
+                    }
+                }
+                
+                // Recursively check nested structures
+                findMatchingPaths(in: value, currentPath: keyPath, pathsToExpand: &pathsToExpand)
+            }
+        } else if let array = data as? [Any] {
+            for (index, value) in array.enumerated() {
+                let itemPath = currentPath.isEmpty ? "[\(index)]" : "\(currentPath)[\(index)]"
+                
+                // Check if array item value matches search
+                if let stringValue = value as? String,
+                   stringValue.lowercased().contains(searchQuery.lowercased()) {
+                    // Expand all parent paths
+                    let pathComponents = currentPath.split(separator: ".")
+                    for i in 0..<pathComponents.count {
+                        let partialPath = pathComponents[0...i].joined(separator: ".")
+                        pathsToExpand.insert(partialPath)
+                    }
+                    pathsToExpand.insert(currentPath)
+                }
+                
+                // Recursively check nested structures
+                findMatchingPaths(in: value, currentPath: itemPath, pathsToExpand: &pathsToExpand)
+            }
+        }
+    }
+}
+
+struct SidebarView: View {
+    let data: Any
+    let searchQuery: String
+    @Binding var expandedPaths: Set<String>
+    @Binding var selectedPath: String?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            SidebarItem(
+                data: data,
+                path: "",
+                searchQuery: searchQuery,
+                expandedPaths: $expandedPaths,
+                selectedPath: $selectedPath
+            )
+        }
+    }
+}
+
+struct SidebarItem: View {
+    let data: Any
+    let path: String
+    let searchQuery: String
+    @Binding var expandedPaths: Set<String>
+    @Binding var selectedPath: String?
+    
+    var body: some View {
+        Group {
+            if let dict = data as? [String: Any] {
+                DisclosureGroup(
+                    isExpanded: Binding(
+                        get: { expandedPaths.contains(path) },
+                        set: { isExpanded in
+                            if isExpanded {
+                                expandedPaths.insert(path)
+                            } else {
+                                expandedPaths.remove(path)
+                            }
+                        }
+                    )
+                ) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(dict.keys.sorted(), id: \.self) { key in
+                            let itemPath = path.isEmpty ? key : "\(path).\(key)"
+                            SidebarItem(
+                                data: dict[key]!,
+                                path: itemPath,
+                                searchQuery: searchQuery,
+                                expandedPaths: $expandedPaths,
+                                selectedPath: $selectedPath
+                            )
+                        }
+                    }
+                    .padding(.leading, 8)
+                } label: {
+                    HStack {
+                        Image(systemName: "curlybraces")
+                            .foregroundColor(.blue)
+                        HighlightedText(text: path.isEmpty ? "Root Object" : path.components(separatedBy: ".").last!, searchQuery: searchQuery)
+                            .font(.system(size: 12))
+                        Spacer()
+                        Text("\(dict.count) items")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedPath = path
+                    }
+                    .background(selectedPath == path ? Color.blue.opacity(0.1) : Color.clear)
+                }
+            } else if let array = data as? [Any] {
+                DisclosureGroup(
+                    isExpanded: Binding(
+                        get: { expandedPaths.contains(path) },
+                        set: { isExpanded in
+                            if isExpanded {
+                                expandedPaths.insert(path)
+                            } else {
+                                expandedPaths.remove(path)
+                            }
+                        }
+                    )
+                ) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(array.indices, id: \.self) { index in
+                            let itemPath = path.isEmpty ? "[\(index)]" : "\(path)[\(index)]"
+                            SidebarItem(
+                                data: array[index],
+                                path: itemPath,
+                                searchQuery: searchQuery,
+                                expandedPaths: $expandedPaths,
+                                selectedPath: $selectedPath
+                            )
+                        }
+                    }
+                    .padding(.leading, 8)
+                } label: {
+                    HStack {
+                        Image(systemName: "square.fill")
+                            .foregroundColor(.orange)
+                        Text(path.isEmpty ? "Root Array" : "[\(path.components(separatedBy: "[").last?.replacingOccurrences(of: "]", with: "") ?? "0")]")
+                            .font(.system(size: 12))
+                        Spacer()
+                        Text("\(array.count) items")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedPath = path
+                    }
+                    .background(selectedPath == path ? Color.blue.opacity(0.1) : Color.clear)
+                }
+            } else {
+                HStack {
+                    Image(systemName: valueIcon(for: data))
+                        .foregroundColor(valueColor(for: data))
+                    HighlightedText(text: path.isEmpty ? "Root Value" : path.components(separatedBy: ".").last!, searchQuery: searchQuery)
+                        .font(.system(size: 12))
+                    Spacer()
+                    Text(typeDescription(for: data))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 2)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    selectedPath = path
+                }
+                .background(selectedPath == path ? Color.blue.opacity(0.1) : Color.clear)
+            }
+        }
+    }
+    
+    private func valueIcon(for data: Any) -> String {
+        if data is String { return "text.quote" }
+        if data is Int || data is Double { return "number" }
+        if data is Bool { return "checkmark.square" }
+        return "circle"
+    }
+    
+    private func valueColor(for data: Any) -> Color {
+        if data is String { return .green }
+        if data is Int || data is Double { return .blue }
+        if data is Bool { return .orange }
+        return .gray
+    }
+    
+    private func typeDescription(for value: Any?) -> String {
+        guard let value = value else { return "null" }
+        switch value {
+        case is String: return "string"
+        case is Int, is Double: return "number"
+        case is Bool: return "boolean"
+        case is [String: Any]: return "object"
+        case is [Any]: return "array"
+        default: return "unknown"
+        }
+    }
 }
 
 struct JsonView: View {
     let data: Any
     let searchQuery: String
+    @Binding var expandedPaths: Set<String>
+    @Binding var selectedPath: String?
     
     var body: some View {
         Group {
             if let dict = data as? [String: Any] {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(dict.keys.sorted(), id: \.self) { key in
-                        DisclosureGroup {
-                            JsonView(data: dict[key]!, searchQuery: searchQuery)
-                                .padding(.leading)
+                        let itemPath = key
+                        DisclosureGroup(
+                            isExpanded: Binding(
+                                get: { expandedPaths.contains(itemPath) },
+                                set: { isExpanded in
+                                    if isExpanded {
+                                        expandedPaths.insert(itemPath)
+                                    } else {
+                                        expandedPaths.remove(itemPath)
+                                    }
+                                }
+                            )
+                        ) {
+                            JsonView(
+                                data: dict[key]!,
+                                searchQuery: searchQuery,
+                                expandedPaths: $expandedPaths,
+                                selectedPath: $selectedPath
+                            )
+                            .padding(.leading)
                         } label: {
                             HStack {
                                 HighlightedText(text: key, searchQuery: searchQuery)
@@ -122,15 +417,37 @@ struct JsonView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedPath = itemPath
+                            }
+                            .background(selectedPath == itemPath ? Color.blue.opacity(0.1) : Color.clear)
                         }
                     }
                 }
             } else if let array = data as? [Any] {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(array.indices, id: \.self) { index in
-                        DisclosureGroup {
-                            JsonView(data: array[index], searchQuery: searchQuery)
-                                .padding(.leading)
+                        let itemPath = "[\(index)]"
+                        DisclosureGroup(
+                            isExpanded: Binding(
+                                get: { expandedPaths.contains(itemPath) },
+                                set: { isExpanded in
+                                    if isExpanded {
+                                        expandedPaths.insert(itemPath)
+                                    } else {
+                                        expandedPaths.remove(itemPath)
+                                    }
+                                }
+                            )
+                        ) {
+                            JsonView(
+                                data: array[index],
+                                searchQuery: searchQuery,
+                                expandedPaths: $expandedPaths,
+                                selectedPath: $selectedPath
+                            )
+                            .padding(.leading)
                         } label: {
                             HStack {
                                 Text("[\(index)]")
@@ -141,6 +458,11 @@ struct JsonView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedPath = itemPath
+                            }
+                            .background(selectedPath == itemPath ? Color.blue.opacity(0.1) : Color.clear)
                         }
                     }
                 }
