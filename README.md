@@ -5,10 +5,12 @@ A native MacOS desktop application to read and display local JSON files with a b
 ## Features
 
 - **Native MacOS Interface**: Built with SwiftUI for a polished, native Mac experience
+- **Custom App Icon**: Professional icon designed for the application
 - **File Selection**: Easy file picker to select JSON files from your filesystem
 - **Hierarchical Display**: JSON structures shown in expandable disclosure groups
 - **Type Indicators**: Each value shows its data type (string, number, boolean, object, array)
 - **Syntax Highlighting**: Values colored by type for better readability
+- **Search & Highlight**: Real-time search functionality that highlights matching text in keys and values
 - **Error Handling**: Clear error messages for invalid JSON or loading issues
 - **Responsive Design**: Clean, modern UI that adapts to content
 
@@ -65,9 +67,10 @@ Or run the built executable directly:
 1. Click the "Open JSON File" button (with document icon)
 2. Select a `.json` file from your Mac
 3. The JSON structure will be displayed in a hierarchical, expandable view
-4. Click disclosure triangles to expand/collapse objects and arrays
-5. Values are color-coded: green for strings, blue for numbers, orange for booleans
-6. Use the "Clear" button to remove the current JSON and load a new one
+4. Use the search field to find specific keys or values - matches will be highlighted in yellow
+5. Click disclosure triangles to expand/collapse objects and arrays
+6. Values are color-coded: green for strings, blue for numbers, orange for booleans
+7. Use the "Clear" button to remove the current JSON and load a new one
 
 ## Creating an App Bundle (Optional)
 

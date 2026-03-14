@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var showingFilePicker = false
     @State private var errorMessage: String? = nil
     @State private var showingError = false
+    @State private var searchQuery = ""
     
     var body: some View {
         VStack(spacing: 20) {
@@ -24,20 +25,27 @@ struct ContentView: View {
                 Spacer()
                 
                 if jsonData != nil {
-                    Button(action: {
-                        jsonData = nil
-                    }) {
-                        Label("Clear", systemImage: "trash")
-                            .foregroundColor(.red)
+                    HStack(spacing: 12) {
+                        TextField("Search JSON...", text: $searchQuery)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .frame(width: 200)
+                        
+                        Button(action: {
+                            jsonData = nil
+                            searchQuery = ""
+                        }) {
+                            Label("Clear", systemImage: "trash")
+                                .foregroundColor(.red)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
-                    .buttonStyle(PlainButtonStyle())
                 }
             }
             .padding(.horizontal)
             
             if let data = jsonData {
                 ScrollView {
-                    JsonView(data: data)
+                    JsonView(data: data, searchQuery: searchQuery)
                         .padding(.horizontal)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -95,6 +103,7 @@ struct ContentView: View {
 
 struct JsonView: View {
     let data: Any
+    let searchQuery: String
     
     var body: some View {
         Group {
@@ -102,13 +111,12 @@ struct JsonView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(dict.keys.sorted(), id: \.self) { key in
                         DisclosureGroup {
-                            JsonView(data: dict[key]!)
+                            JsonView(data: dict[key]!, searchQuery: searchQuery)
                                 .padding(.leading)
                         } label: {
                             HStack {
-                                Text(key)
+                                HighlightedText(text: key, searchQuery: searchQuery)
                                     .font(.system(.body, design: .default))
-                                    .fontWeight(.medium)
                                 Spacer()
                                 Text(typeDescription(for: dict[key]))
                                     .font(.caption)
@@ -121,7 +129,7 @@ struct JsonView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(array.indices, id: \.self) { index in
                         DisclosureGroup {
-                            JsonView(data: array[index])
+                            JsonView(data: array[index], searchQuery: searchQuery)
                                 .padding(.leading)
                         } label: {
                             HStack {
@@ -137,7 +145,7 @@ struct JsonView: View {
                     }
                 }
             } else {
-                Text(stringRepresentation(of: data))
+                HighlightedText(text: stringRepresentation(of: data), searchQuery: searchQuery)
                     .font(.system(.body, design: .monospaced))
                     .foregroundColor(valueColor(for: data))
             }
@@ -173,5 +181,63 @@ struct JsonView: View {
         } else {
             return .primary
         }
+    }
+}
+
+struct HighlightedText: View {
+    let text: String
+    let searchQuery: String
+    
+    var body: some View {
+        if searchQuery.isEmpty {
+            Text(text)
+        } else {
+            let lowerText = text.lowercased()
+            let lowerQuery = searchQuery.lowercased()
+            if lowerQuery.isEmpty || !lowerText.contains(lowerQuery) {
+                Text(text)
+            } else {
+                // Create highlighted text using multiple Text views
+                let components = highlightComponents()
+                HStack(spacing: 0) {
+                    ForEach(components.indices, id: \.self) { index in
+                        Text(components[index].text)
+                            .background(components[index].isHighlighted ? Color.yellow.opacity(0.3) : Color.clear)
+                            .foregroundColor(components[index].isHighlighted ? .black : .primary)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func highlightComponents() -> [(text: String, isHighlighted: Bool)] {
+        var components: [(String, Bool)] = []
+        let lowerText = text.lowercased()
+        let lowerQuery = searchQuery.lowercased()
+        
+        if lowerQuery.isEmpty || !lowerText.contains(lowerQuery) {
+            return [(text, false)]
+        }
+        
+        var searchRange = text.startIndex..<text.endIndex
+        var currentIndex = text.startIndex
+        
+        while let range = text.range(of: searchQuery, options: .caseInsensitive, range: searchRange) {
+            // Add text before the match
+            if currentIndex < range.lowerBound {
+                components.append((String(text[currentIndex..<range.lowerBound]), false))
+            }
+            // Add the highlighted match
+            components.append((String(text[range]), true))
+            currentIndex = range.upperBound
+            searchRange = currentIndex..<text.endIndex
+        }
+        
+        // Add remaining text
+        if currentIndex < text.endIndex {
+            components.append((String(text[currentIndex..<text.endIndex]), false))
+        }
+        
+        return components
     }
 }
