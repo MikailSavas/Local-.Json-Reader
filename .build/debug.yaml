@@ -1,0 +1,81 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "JsonReader-arm64-apple-macosx26.0-debug.exe": ["<JsonReader-arm64-apple-macosx26.0-debug.exe>"]
+  "JsonReader-arm64-apple-macosx26.0-debug.module": ["<JsonReader-arm64-apple-macosx26.0-debug.module>"]
+  "PackageStructure": ["<PackageStructure>"]
+  "main": ["<JsonReader-arm64-apple-macosx26.0-debug.exe>","<JsonReader-arm64-apple-macosx26.0-debug.module>"]
+  "test": ["<JsonReader-arm64-apple-macosx26.0-debug.exe>","<JsonReader-arm64-apple-macosx26.0-debug.module>"]
+default: "main"
+nodes:
+  "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+  "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader":
+    is-mutated: true
+commands:
+  "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader-entitlement.plist":
+    tool: write-auxiliary-file
+    inputs: ["<entitlement-plist>","<com.apple.security.get-task-allow>"]
+    outputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader-entitlement.plist"]
+    description: "Write auxiliary file /Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader-entitlement.plist"
+
+  "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/App.swift","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/ContentView.swift"]
+    outputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/sources"]
+    description: "Write auxiliary file /Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/sources"
+
+  "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.product/Objects.LinkFileList":
+    tool: write-auxiliary-file
+    inputs: ["<link-file-list>","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/App.swift.o","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/ContentView.swift.o"]
+    outputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.product/Objects.LinkFileList"]
+    description: "Write auxiliary file /Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.product/Objects.LinkFileList"
+
+  "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"]
+    outputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+
+  "<JsonReader-arm64-apple-macosx26.0-debug.exe>":
+    tool: phony
+    inputs: ["<JsonReader-arm64-apple-macosx26.0-debug.exe-CodeSigning>"]
+    outputs: ["<JsonReader-arm64-apple-macosx26.0-debug.exe>"]
+
+  "<JsonReader-arm64-apple-macosx26.0-debug.module>":
+    tool: phony
+    inputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/App.swift.o","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/ContentView.swift.o","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/Modules/JsonReader.swiftmodule"]
+    outputs: ["<JsonReader-arm64-apple-macosx26.0-debug.module>"]
+
+  "C.JsonReader-arm64-apple-macosx26.0-debug.exe":
+    tool: shell
+    inputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/App.swift.o","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/ContentView.swift.o","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.product/Objects.LinkFileList"]
+    outputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader"]
+    description: "Linking ./.build/arm64-apple-macosx/debug/JsonReader"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-L","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug","-o","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader","-module-name","JsonReader","-Xlinker","-no_warn_duplicate_libraries","-emit-executable","-Xlinker","-alias","-Xlinker","_JsonReader_main","-Xlinker","_main","-Xlinker","-rpath","-Xlinker","@loader_path","@/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.product/Objects.LinkFileList","-Xlinker","-rpath","-Xlinker","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-6.2/macosx","-target","arm64-apple-macosx12.0","-Xlinker","-add_ast_path","-Xlinker","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/Modules/JsonReader.swiftmodule","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g"]
+
+  "C.JsonReader-arm64-apple-macosx26.0-debug.exe-entitlements":
+    tool: shell
+    inputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader-entitlement.plist"]
+    outputs: ["<JsonReader-arm64-apple-macosx26.0-debug.exe-CodeSigning>"]
+    description: "Applying debug entitlements to ./.build/arm64-apple-macosx/debug/JsonReader"
+    args: ["codesign","--force","--sign","-","--entitlements","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader-entitlement.plist","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader"]
+
+  "C.JsonReader-arm64-apple-macosx26.0-debug.module":
+    tool: shell
+    inputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/App.swift","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/ContentView.swift","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/sources"]
+    outputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/App.swift.o","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/ContentView.swift.o","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/Modules/JsonReader.swiftmodule"]
+    description: "Compiling Swift Module 'JsonReader' (2 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","JsonReader","-emit-dependencies","-emit-module","-emit-module-path","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/Modules/JsonReader.swiftmodule","-output-file-map","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/output-file-map.json","-incremental","-c","@/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/JsonReader.build/sources","-I","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx12.0","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-j8","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-Xfrontend","-entry-point-function-name","-Xfrontend","JsonReader_main","-color-diagnostics","-swift-version","5","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-Xcc","-fPIC","-Xcc","-g"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/Users/mikailsavas/Documents/GitHub/Local .Json Reader/","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/Package.swift","/Users/mikailsavas/Documents/GitHub/Local .Json Reader/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+
