@@ -11,6 +11,9 @@ A native MacOS desktop application to read and display local JSON files with a b
 - **Type Indicators**: Each value shows its data type (string, number, boolean, object, array)
 - **Syntax Highlighting**: Values colored by type for better readability
 - **Search & Highlight**: Real-time search functionality that highlights matching text in keys and values
+- **Smart Auto-Expand**: Search automatically expands sections containing matches
+- **Sidebar Navigation**: Compact sidebar showing JSON structure with item counts
+- **Interactive Selection**: Click sidebar items to highlight them in the main view
 - **Error Handling**: Clear error messages for invalid JSON or loading issues
 - **Responsive Design**: Clean, modern UI that adapts to content
 
@@ -71,10 +74,13 @@ Or run the built executable directly:
 1. Click the "Open JSON File" button (with document icon)
 2. Select a `.json` file from your Mac
 3. The JSON structure will be displayed in a hierarchical, expandable view
-4. Use the search field to find specific keys or values - matches will be highlighted in yellow
-5. Click disclosure triangles to expand/collapse objects and arrays
-6. Values are color-coded: green for strings, blue for numbers, orange for booleans
-7. Use the "Clear" button to remove the current JSON and load a new one
+4. Use the **sidebar** on the left to navigate the JSON structure quickly
+5. Click any item in the sidebar to highlight it in the main view
+6. Use the search field to find specific keys or values - matches will be highlighted in yellow
+7. Search automatically expands sections containing matches for easy navigation
+8. Click disclosure triangles to expand/collapse objects and arrays
+9. Values are color-coded: green for strings, blue for numbers, orange for booleans
+10. Use the "Clear" button to remove the current JSON and load a new one
 
 ## Creating an App Bundle (Optional)
 
