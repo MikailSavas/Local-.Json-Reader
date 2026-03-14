@@ -10,6 +10,11 @@ struct ContentView: View {
     @State private var expandedPaths = Set<String>()
     @State private var selectedPath: String? = nil
     @State private var matchingPaths = Set<String>()
+    @State private var viewMode: ViewMode = .tree
+    
+    enum ViewMode {
+        case tree, searchResults
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -25,7 +30,14 @@ struct ContentView: View {
                         .cornerRadius(8)
                 }
                 .buttonStyle(PlainButtonStyle())
-                
+                Picker("View", selection: $viewMode) {
+                            Text("Tree").tag(ViewMode.tree)
+                            Text("Search Results").tag(ViewMode.searchResults)
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                        .frame(width: 200)
+                        
+                        
                 Spacer()
                 
                 if jsonData != nil {
@@ -85,14 +97,23 @@ struct ContentView: View {
                         }
                         
                         ScrollView {
-                            JsonView(
-                                data: data,
-                                searchQuery: searchQuery,
-                                expandedPaths: $expandedPaths,
-                                selectedPath: $selectedPath,
-                                matchingPaths: matchingPaths
-                            )
-                            .padding(.horizontal)
+                            if viewMode == .tree {
+                                JsonView(
+                                    data: data,
+                                    searchQuery: searchQuery,
+                                    expandedPaths: $expandedPaths,
+                                    selectedPath: $selectedPath,
+                                    matchingPaths: matchingPaths
+                                )
+                                .padding(.horizontal)
+                            } else {
+                                SearchResultsView(
+                                    data: data,
+                                    searchQuery: searchQuery,
+                                    selectedPath: $selectedPath
+                                )
+                                .padding(.horizontal)
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -257,10 +278,10 @@ struct SidebarView: View {
             SidebarItem(
                 data: data,
                 path: "",
+                matchingPaths: matchingPaths,
                 searchQuery: searchQuery,
                 expandedPaths: $expandedPaths,
-                selectedPath: $selectedPath,
-                matchingPaths: matchingPaths
+                selectedPath: $selectedPath
             )
         }
     }
@@ -295,10 +316,10 @@ struct SidebarItem: View {
                             SidebarItem(
                                 data: dict[key]!,
                                 path: itemPath,
+                                matchingPaths: matchingPaths,
                                 searchQuery: searchQuery,
                                 expandedPaths: $expandedPaths,
-                                selectedPath: $selectedPath,
-                                matchingPaths: matchingPaths
+                                selectedPath: $selectedPath
                             )
                         }
                     }
@@ -314,7 +335,7 @@ struct SidebarItem: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    .sidebarBackground(for: path)
+                    .background(sidebarBackground(for: path))
                     .contentShape(Rectangle())
                     .onTapGesture {
                         selectedPath = path
@@ -336,13 +357,13 @@ struct SidebarItem: View {
                 ) {
                     VStack(alignment: .leading, spacing: 2) {
                         ForEach(array.indices, id: \.self) { index in
-                            let itemPath
+                            let itemPath = path.isEmpty ? "[\(index)]" : "\(path)[\(index)]"
+                            SidebarItem(
                                 data: array[index],
                                 path: itemPath,
+                                matchingPaths: matchingPaths,
                                 searchQuery: searchQuery,
                                 expandedPaths: $expandedPaths,
-                                selectedPath: $selectedPath,
-                                matchingPaths: matchingPathshs,
                                 selectedPath: $selectedPath
                             )
                         }
@@ -356,11 +377,10 @@ struct SidebarItem: View {
                             .font(.system(size: 12))
                         Spacer()
                         Text("\(array.count) items")
-                            .fontgroundColor(.secondary)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
-                    .s(.caption)
-                            .foreidebarBackground(for: path)
-                    }
+                    .background(sidebarBackground(for: path))
                     .contentShape(Rectangle())
                     .onTapGesture {
                         selectedPath = path
@@ -374,11 +394,11 @@ struct SidebarItem: View {
                     HighlightedText(text: path.isEmpty ? "Root Value" : path.components(separatedBy: ".").last!, searchQuery: searchQuery)
                         .font(.system(size: 12))
                     Spacer()
-                 
-                .s   Text(typeDescription(for: data))
+                    Text(typeDescription(for: data))
                         .font(.caption)
                         .foregroundColor(.secondary)
-                }idebarBackground(for: path)
+                }
+                .background(sidebarBackground(for: path))
                 .padding(.vertical, 2)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -461,8 +481,12 @@ struct JsonView: View {
                             .padding(.leading)
                         } label: {
                             HStack {
-                                HighlightedText(text: key, searchQuery: searchQuery)
-                                    .font(.system(.body, design: .default))
+                                HighlightedText(text: "\"\(key)\"", searchQuery: searchQuery)
+                                    .font(.system(.body, design: .monospaced))
+                                    .foregroundColor(.blue)
+                                Text(":")
+                                    .foregroundColor(.secondary)
+                                    .font(.system(.body, design: .monospaced))
                                 Spacer()
                                 Text(typeDescription(for: dict[key]))
                                     .font(.caption)
@@ -506,8 +530,12 @@ struct JsonView: View {
                         } label: {
                             HStack {
                                 Text("[\(index)]")
-                                    .font(.system(.body, design: .default))
+                                    .font(.system(.body, design: .monospaced))
+                                    .foregroundColor(.purple)
                                     .fontWeight(.medium)
+                                Text(":")
+                                    .foregroundColor(.secondary)
+                                    .font(.system(.body, design: .monospaced))
                                 Spacer()
                                 Text(typeDescription(for: array[index]))
                                     .font(.caption)
@@ -525,9 +553,7 @@ struct JsonView: View {
                     }
                 }
             } else {
-                HighlightedText(text: stringRepresentation(of: data), searchQuery: searchQuery)
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundColor(valueColor(for: data))
+                JsonValueDisplay(value: data, searchQuery: searchQuery)
             }
         }
     }
@@ -565,51 +591,203 @@ struct JsonView: View {
             return "\(data)"
         }
     }
-    
-    private func valueColor(for data: Any) -> Color {
-        if data is String { return .green }
-        if data is Int || data is Double { return .blue }
-        if data is Bool { return .orange }
-        return .primary
-    }
+}
 
-            let lowerQuery = searchQuery.lowercased()
-                            .foregroundColor(components[index].isHighlighted ? .black : .primary)
+struct SearchResultsView: View {
+    let data: Any
+    let searchQuery: String
+    @Binding var selectedPath: String?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if searchQuery.isEmpty {
+                Text("Enter a search query to see results")
+                    .foregroundColor(.secondary)
+                    .padding()
+            } else {
+                let results = findSearchResults(in: data, currentPath: "")
+                if results.isEmpty {
+                    Text("No matches found for '\(searchQuery)'")
+                        .foregroundColor(.secondary)
+                        .padding()
+                } else {
+                    Text("\(results.count) matches found")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    ForEach(results, id: \.path) { result in
+                        SearchResultRow(result: result, selectedPath: $selectedPath)
                     }
                 }
             }
         }
     }
     
-    private func highlightComponents() -> [(text: String, isHighlighted: Bool)] {
-        var components: [(String, Bool)] = []
-        let lowerText = text.lowercased()
-        let lowerQuery = searchQuery.lowercased()
+    private func findSearchResults(in data: Any, currentPath: String) -> [SearchResult] {
+        var results: [SearchResult] = []
         
-        if lowerQuery.isEmpty || !lowerText.contains(lowerQuery) {
-            return [(text, false)]
-        }
-        
-        var searchRange = text.startIndex..<text.endIndex
-        var currentIndex = text.startIndex
-        
-        while let range = text.range(of: searchQuery, options: .caseInsensitive, range: searchRange) {
-            // Add text before the match
-            if currentIndex < range.lowerBound {
-                components.append((String(text[currentIndex..<range.lowerBound]), false))
+        if let dict = data as? [String: Any] {
+            for (key, value) in dict {
+                let keyPath = currentPath.isEmpty ? key : "\(currentPath).\(key)"
+                
+                // Check if key matches
+                if key.lowercased().contains(searchQuery.lowercased()) {
+                    results.append(SearchResult(
+                        path: keyPath,
+                        key: key,
+                        value: value,
+                        matchType: .key
+                    ))
+                }
+                
+                // Check if string value matches
+                if let stringValue = value as? String,
+                   stringValue.lowercased().contains(searchQuery.lowercased()) {
+                    results.append(SearchResult(
+                        path: keyPath,
+                        key: key,
+                        value: stringValue,
+                        matchType: .value
+                    ))
+                }
+                
+                // Recursively search nested structures
+                results.append(contentsOf: findSearchResults(in: value, currentPath: keyPath))
             }
-            // Add the highlighted match
-            components.append((String(text[range]), true))
-            currentIndex = range.upperBound
-            searchRange = currentIndex..<text.endIndex
+        } else if let array = data as? [Any] {
+            for (index, value) in array.enumerated() {
+                let itemPath = currentPath.isEmpty ? "[\(index)]" : "\(currentPath)[\(index)]"
+                
+                // Check if array item value matches
+                if let stringValue = value as? String,
+                   stringValue.lowercased().contains(searchQuery.lowercased()) {
+                    results.append(SearchResult(
+                        path: itemPath,
+                        key: "[\(index)]",
+                        value: stringValue,
+                        matchType: .value
+                    ))
+                }
+                
+                // Recursively search nested structures
+                results.append(contentsOf: findSearchResults(in: value, currentPath: itemPath))
+            }
         }
         
-        // Add remaining text
-        if currentIndex < text.endIndex {
-            components.append((String(text[currentIndex..<text.endIndex]), false))
+        return results
+    }
+}
+
+struct SearchResult: Identifiable {
+    let id = UUID()
+    let path: String
+    let key: String
+    let value: Any
+    let matchType: MatchType
+    
+    enum MatchType {
+        case key, value
+    }
+}
+
+struct SearchResultRow: View {
+    let result: SearchResult
+    @Binding var selectedPath: String?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(result.path)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text(result.matchType == .key ? "Key" : "Value")
+                    .font(.caption2)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(result.matchType == .key ? Color.blue.opacity(0.2) : Color.green.opacity(0.2))
+                    .cornerRadius(4)
+            }
+            
+            HStack(alignment: .top) {
+                HighlightedText(text: result.key, searchQuery: "")
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundColor(.blue)
+                
+                Text(":")
+                    .foregroundColor(.secondary)
+                
+                JsonValueView(value: result.value, searchQuery: "")
+                    .font(.system(.body, design: .monospaced))
+            }
         }
-        
-        return components
+        .padding()
+        .background(Color(.controlBackgroundColor))
+        .cornerRadius(8)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectedPath = result.path
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(selectedPath == result.path ? Color.blue : Color.clear, lineWidth: 2)
+        )
+    }
+}
+
+struct JsonValueView: View {
+    let value: Any
+    let searchQuery: String
+    
+    var body: some View {
+        Group {
+            if let string = value as? String {
+                HighlightedText(text: "\"\(string)\"", searchQuery: searchQuery)
+                    .foregroundColor(.green)
+            } else if let number = value as? NSNumber {
+                HighlightedText(text: "\(number)", searchQuery: searchQuery)
+                    .foregroundColor(.blue)
+            } else if let bool = value as? Bool {
+                HighlightedText(text: "\(bool)", searchQuery: searchQuery)
+                    .foregroundColor(.orange)
+            } else if value is [String: Any] {
+                Text("{...}")
+                    .foregroundColor(.purple)
+            } else if value is [Any] {
+                Text("[...]")
+                    .foregroundColor(.purple)
+            } else {
+                HighlightedText(text: "\(value)", searchQuery: searchQuery)
+                    .foregroundColor(.primary)
+            }
+        }
+    }
+}
+
+struct JsonValueDisplay: View {
+    let value: Any
+    let searchQuery: String
+    
+    var body: some View {
+        Group {
+            if let string = value as? String {
+                HighlightedText(text: "\"\(string)\"", searchQuery: searchQuery)
+                    .foregroundColor(.green)
+            } else if let number = value as? NSNumber {
+                HighlightedText(text: "\(number)", searchQuery: searchQuery)
+                    .foregroundColor(.blue)
+            } else if let bool = value as? Bool {
+                HighlightedText(text: "\(bool)", searchQuery: searchQuery)
+                    .foregroundColor(.orange)
+            } else if value is NSNull {
+                Text("null")
+                    .foregroundColor(.gray)
+            } else {
+                HighlightedText(text: "\(value)", searchQuery: searchQuery)
+                    .foregroundColor(.primary)
+            }
+        }
+        .font(.system(.body, design: .monospaced))
     }
 }
 
