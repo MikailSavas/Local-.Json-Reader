@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var searchQuery = ""
     @State private var expandedPaths = Set<String>()
     @State private var selectedPath: String? = nil
+    @State private var matchingPaths = Set<String>()
     
     var body: some View {
         VStack(spacing: 0) {
@@ -65,7 +66,8 @@ struct ContentView: View {
                                 data: data,
                                 searchQuery: searchQuery,
                                 expandedPaths: $expandedPaths,
-                                selectedPath: $selectedPath
+                                selectedPath: $selectedPath,
+                                matchingPaths: matchingPaths
                             )
                             .padding(.horizontal)
                         }
@@ -87,7 +89,8 @@ struct ContentView: View {
                                 data: data,
                                 searchQuery: searchQuery,
                                 expandedPaths: $expandedPaths,
-                                selectedPath: $selectedPath
+                                selectedPath: $selectedPath,
+                                matchingPaths: matchingPaths
                             )
                             .padding(.horizontal)
                         }
@@ -141,6 +144,7 @@ struct ContentView: View {
             expandedPaths.removeAll()
             selectedPath = nil
             searchQuery = ""
+            matchingPaths.removeAll()
         } catch let decodingError as DecodingError {
             errorMessage = "Invalid JSON format: \(decodingError.localizedDescription)"
             showingError = true
@@ -154,43 +158,56 @@ struct ContentView: View {
         guard let data = jsonData, !searchQuery.isEmpty else {
             if searchQuery.isEmpty {
                 expandedPaths.removeAll()
+                matchingPaths.removeAll()
             }
             return
         }
         
         var pathsToExpand = Set<String>()
-        findMatchingPaths(in: data, currentPath: "", pathsToExpand: &pathsToExpand)
+        var pathsWithMatches = Set<String>()
+        findMatchingPaths(in: data, currentPath: "", pathsToExpand: &pathsToExpand, pathsWithMatches: &pathsWithMatches)
         expandedPaths = pathsToExpand
+        matchingPaths = pathsWithMatches
     }
     
-    private func findMatchingPaths(in data: Any, currentPath: String, pathsToExpand: inout Set<String>) {
+    private func findMatchingPaths(in data: Any, currentPath: String, pathsToExpand: inout Set<String>, pathsWithMatches: inout Set<String>) {
+        var hasMatchInThisSection = false
+        
         if let dict = data as? [String: Any] {
             for (key, value) in dict {
                 let keyPath = currentPath.isEmpty ? key : "\(currentPath).\(key)"
                 
                 // Check if key matches search
                 if key.lowercased().contains(searchQuery.lowercased()) {
+                    hasMatchInThisSection = true
                     // Expand all parent paths
                     let pathComponents = keyPath.split(separator: ".")
                     for i in 0..<pathComponents.count {
                         let partialPath = pathComponents[0...i].joined(separator: ".")
                         pathsToExpand.insert(partialPath)
+                        pathsWithMatches.insert(partialPath)
                     }
                 }
                 
                 // Check if string value matches search
                 if let stringValue = value as? String,
                    stringValue.lowercased().contains(searchQuery.lowercased()) {
+                    hasMatchInThisSection = true
                     // Expand all parent paths
                     let pathComponents = keyPath.split(separator: ".")
                     for i in 0..<pathComponents.count {
                         let partialPath = pathComponents[0...i].joined(separator: ".")
                         pathsToExpand.insert(partialPath)
+                        pathsWithMatches.insert(partialPath)
                     }
                 }
                 
-                // Recursively check nested structures
-                findMatchingPaths(in: value, currentPath: keyPath, pathsToExpand: &pathsToExpand)
+                _ = findMatchingPaths(in: value, currentPath: keyPath, pathsToExpand: &pathsToExpand, pathsWithMatches: &pathsWithMatches)
+                
+                // If child has match, mark this section
+                if pathsWithMatches.contains(keyPath) {
+                    hasMatchInThisSection = true
+                }
             }
         } else if let array = data as? [Any] {
             for (index, value) in array.enumerated() {
@@ -199,18 +216,31 @@ struct ContentView: View {
                 // Check if array item value matches search
                 if let stringValue = value as? String,
                    stringValue.lowercased().contains(searchQuery.lowercased()) {
+                    hasMatchInThisSection = true
                     // Expand all parent paths
                     let pathComponents = currentPath.split(separator: ".")
                     for i in 0..<pathComponents.count {
                         let partialPath = pathComponents[0...i].joined(separator: ".")
                         pathsToExpand.insert(partialPath)
+                        pathsWithMatches.insert(partialPath)
                     }
                     pathsToExpand.insert(currentPath)
+                    pathsWithMatches.insert(currentPath)
                 }
                 
                 // Recursively check nested structures
-                findMatchingPaths(in: value, currentPath: itemPath, pathsToExpand: &pathsToExpand)
+                _ = findMatchingPaths(in: value, currentPath: itemPath, pathsToExpand: &pathsToExpand, pathsWithMatches: &pathsWithMatches)
+                
+                // If child has match, mark this section
+                if pathsWithMatches.contains(itemPath) {
+                    hasMatchInThisSection = true
+                }
             }
+        }
+        
+        // If this section has matches, add it to matching paths
+        if hasMatchInThisSection && !currentPath.isEmpty {
+            pathsWithMatches.insert(currentPath)
         }
     }
 }
@@ -220,6 +250,7 @@ struct SidebarView: View {
     let searchQuery: String
     @Binding var expandedPaths: Set<String>
     @Binding var selectedPath: String?
+    let matchingPaths: Set<String>
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -228,7 +259,8 @@ struct SidebarView: View {
                 path: "",
                 searchQuery: searchQuery,
                 expandedPaths: $expandedPaths,
-                selectedPath: $selectedPath
+                selectedPath: $selectedPath,
+                matchingPaths: matchingPaths
             )
         }
     }
@@ -237,6 +269,7 @@ struct SidebarView: View {
 struct SidebarItem: View {
     let data: Any
     let path: String
+    let matchingPaths: Set<String>
     let searchQuery: String
     @Binding var expandedPaths: Set<String>
     @Binding var selectedPath: String?
@@ -264,7 +297,8 @@ struct SidebarItem: View {
                                 path: itemPath,
                                 searchQuery: searchQuery,
                                 expandedPaths: $expandedPaths,
-                                selectedPath: $selectedPath
+                                selectedPath: $selectedPath,
+                                matchingPaths: matchingPaths
                             )
                         }
                     }
@@ -280,6 +314,7 @@ struct SidebarItem: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                    .sidebarBackground(for: path)
                     .contentShape(Rectangle())
                     .onTapGesture {
                         selectedPath = path
@@ -301,12 +336,13 @@ struct SidebarItem: View {
                 ) {
                     VStack(alignment: .leading, spacing: 2) {
                         ForEach(array.indices, id: \.self) { index in
-                            let itemPath = path.isEmpty ? "[\(index)]" : "\(path)[\(index)]"
-                            SidebarItem(
+                            let itemPath
                                 data: array[index],
                                 path: itemPath,
                                 searchQuery: searchQuery,
                                 expandedPaths: $expandedPaths,
+                                selectedPath: $selectedPath,
+                                matchingPaths: matchingPathshs,
                                 selectedPath: $selectedPath
                             )
                         }
@@ -320,8 +356,10 @@ struct SidebarItem: View {
                             .font(.system(size: 12))
                         Spacer()
                         Text("\(array.count) items")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .fontgroundColor(.secondary)
+                    }
+                    .s(.caption)
+                            .foreidebarBackground(for: path)
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -336,10 +374,11 @@ struct SidebarItem: View {
                     HighlightedText(text: path.isEmpty ? "Root Value" : path.components(separatedBy: ".").last!, searchQuery: searchQuery)
                         .font(.system(size: 12))
                     Spacer()
-                    Text(typeDescription(for: data))
+                 
+                .s   Text(typeDescription(for: data))
                         .font(.caption)
                         .foregroundColor(.secondary)
-                }
+                }idebarBackground(for: path)
                 .padding(.vertical, 2)
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -375,6 +414,16 @@ struct SidebarItem: View {
         default: return "unknown"
         }
     }
+    
+    private func sidebarBackground(for path: String) -> Color {
+        if selectedPath == path {
+            return Color.blue.opacity(0.2)
+        } else if matchingPaths.contains(path) {
+            return Color.yellow.opacity(0.1)
+        } else {
+            return Color.clear
+        }
+    }
 }
 
 struct JsonView: View {
@@ -382,6 +431,7 @@ struct JsonView: View {
     let searchQuery: String
     @Binding var expandedPaths: Set<String>
     @Binding var selectedPath: String?
+    let matchingPaths: Set<String>
     
     var body: some View {
         Group {
@@ -405,7 +455,8 @@ struct JsonView: View {
                                 data: dict[key]!,
                                 searchQuery: searchQuery,
                                 expandedPaths: $expandedPaths,
-                                selectedPath: $selectedPath
+                                selectedPath: $selectedPath,
+                                matchingPaths: matchingPaths
                             )
                             .padding(.leading)
                         } label: {
@@ -417,11 +468,14 @@ struct JsonView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(sectionBackground(for: itemPath))
+                            .cornerRadius(4)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 selectedPath = itemPath
                             }
-                            .background(selectedPath == itemPath ? Color.blue.opacity(0.1) : Color.clear)
                         }
                     }
                 }
@@ -445,7 +499,8 @@ struct JsonView: View {
                                 data: array[index],
                                 searchQuery: searchQuery,
                                 expandedPaths: $expandedPaths,
-                                selectedPath: $selectedPath
+                                selectedPath: $selectedPath,
+                                matchingPaths: matchingPaths
                             )
                             .padding(.leading)
                         } label: {
@@ -458,11 +513,14 @@ struct JsonView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(sectionBackground(for: itemPath))
+                            .cornerRadius(4)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 selectedPath = itemPath
                             }
-                            .background(selectedPath == itemPath ? Color.blue.opacity(0.1) : Color.clear)
                         }
                     }
                 }
@@ -486,23 +544,72 @@ struct JsonView: View {
         }
     }
     
-    private func stringRepresentation(of data: Any) -> String {
-        if data is NSNull {
-            return "null"
+    private func sectionBackground(for path: String) -> Color {
+        if selectedPath == path {
+            return Color.blue.opacity(0.2)
+        } else if matchingPaths.contains(path) {
+            return Color.yellow.opacity(0.1)
+        } else {
+            return Color.clear
         }
-        return "\(data)"
+    }
+    
+    private func stringRepresentation(of data: Any) -> String {
+        if let string = data as? String {
+            return "\"\(string)\""
+        } else if let number = data as? NSNumber {
+            return "\(number)"
+        } else if let bool = data as? Bool {
+            return "\(bool)"
+        } else {
+            return "\(data)"
+        }
     }
     
     private func valueColor(for data: Any) -> Color {
-        if data is String {
-            return .green
-        } else if data is Int || data is Double {
-            return .blue
-        } else if data is Bool {
-            return .orange
-        } else {
-            return .primary
+        if data is String { return .green }
+        if data is Int || data is Double { return .blue }
+        if data is Bool { return .orange }
+        return .primary
+    }
+
+            let lowerQuery = searchQuery.lowercased()
+                            .foregroundColor(components[index].isHighlighted ? .black : .primary)
+                    }
+                }
+            }
         }
+    }
+    
+    private func highlightComponents() -> [(text: String, isHighlighted: Bool)] {
+        var components: [(String, Bool)] = []
+        let lowerText = text.lowercased()
+        let lowerQuery = searchQuery.lowercased()
+        
+        if lowerQuery.isEmpty || !lowerText.contains(lowerQuery) {
+            return [(text, false)]
+        }
+        
+        var searchRange = text.startIndex..<text.endIndex
+        var currentIndex = text.startIndex
+        
+        while let range = text.range(of: searchQuery, options: .caseInsensitive, range: searchRange) {
+            // Add text before the match
+            if currentIndex < range.lowerBound {
+                components.append((String(text[currentIndex..<range.lowerBound]), false))
+            }
+            // Add the highlighted match
+            components.append((String(text[range]), true))
+            currentIndex = range.upperBound
+            searchRange = currentIndex..<text.endIndex
+        }
+        
+        // Add remaining text
+        if currentIndex < text.endIndex {
+            components.append((String(text[currentIndex..<text.endIndex]), false))
+        }
+        
+        return components
     }
 }
 
