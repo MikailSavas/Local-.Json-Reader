@@ -2,6 +2,42 @@
 
 A native MacOS desktop application to read and display local JSON files with a beautiful, modern interface built with SwiftUI.
 
+## Installation
+
+### Option 1: Automated Installer (Recommended)
+1. Open Terminal in the project folder
+2. Run: `./install.sh`
+3. Enter your password when prompted
+4. The app will be installed to your Applications folder
+
+### Option 2: Manual Installation
+1. Open Terminal in the project folder
+2. Build the release version:
+   ```bash
+   swift build --configuration release
+   ```
+3. Update the app bundle:
+   ```bash
+   sudo cp .build/release/JsonReader JsonReader.app/Contents/MacOS/JsonReader
+   ```
+4. Install to Applications:
+   ```bash
+   sudo cp -r JsonReader.app /Applications/
+   ```
+5. Find "Local JSON Reader" in your Applications folder
+
+### Option 3: DMG Installer (Professional)
+1. Open Terminal in the project folder
+2. Run: `./create_dmg.sh`
+3. Enter your password when prompted
+4. Double-click the created `Local_JSON_Reader.dmg` file
+5. Drag "Local JSON Reader" to your Applications folder
+
+### Option 4: Using the PKG Installer
+1. Double-click `JsonReader.pkg` in the project folder
+2. Follow the installation wizard
+3. The app will be installed to your Applications folder
+
 ## Features
 
 - **Native MacOS Interface**: Built with SwiftUI for a polished, native Mac experience
@@ -16,6 +52,12 @@ A native MacOS desktop application to read and display local JSON files with a b
 - **Interactive Selection**: Click sidebar items to highlight them in the main view
 - **Error Handling**: Clear error messages for invalid JSON or loading issues
 - **Responsive Design**: Clean, modern UI that adapts to content
+- **Rich Text Editor**: Multiple view modes (Tree, Search, Editor)
+- **Markdown Support**: Automatic rendering of markdown content in JSON strings
+- **Advanced Sorting**: A-Z, Z-A sorting options for JSON objects
+- **Text Editor Mode**: Full JSON editing with syntax highlighting and formatting
+
+## Requirements
 
 ## Requirements
 

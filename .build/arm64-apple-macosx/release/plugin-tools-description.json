@@ -1,0 +1,258 @@
+{
+  "builtTestProducts" : [
+
+  ],
+  "copyCommands" : {
+
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.JsonReader-arm64-apple-macosx26.0-release.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/sources",
+      "importPath" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/App.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/ContentView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "JsonReader",
+      "moduleOutputPath" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/Modules/JsonReader.swiftmodule",
+      "objects" : [
+        "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/App.swift.o",
+        "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/ContentView.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx12.0",
+        "-whole-module-optimization",
+        "-num-threads",
+        "8",
+        "-serialize-diagnostics",
+        "-O",
+        "-j8",
+        "-DSWIFT_PACKAGE",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "JsonReader_main",
+        "-color-diagnostics",
+        "-swift-version",
+        "5",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g"
+      ],
+      "outputFileMapPath" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/App.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/ContentView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/Modules/JsonReader.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/App.swift",
+        "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/ContentView.swift"
+      ],
+      "tempsPath" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build",
+      "wholeModuleOptimization" : true
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "JsonReader" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "JsonReader",
+      "-c",
+      "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/App.swift",
+      "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/ContentView.swift",
+      "-I",
+      "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/Modules",
+      "-target",
+      "arm64-apple-macosx12.0",
+      "-whole-module-optimization",
+      "-num-threads",
+      "8",
+      "-serialize-diagnostics",
+      "-O",
+      "-j8",
+      "-DSWIFT_PACKAGE",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "JsonReader_main",
+      "-color-diagnostics",
+      "-swift-version",
+      "5",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "JsonReader" : [
+
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/App.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/ContentView.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/sources"
+    },
+    "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/App.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/ContentView.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.product/Objects.LinkFileList"
+    },
+    "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

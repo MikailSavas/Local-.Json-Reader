@@ -1,0 +1,19 @@
+{
+  "": {
+    "dependencies": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/JsonReader.d",
+    "object": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/JsonReader.o",
+    "swift-dependencies": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/master.swiftdeps"
+  },
+  "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/App.swift": {
+    "object": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/App.swift.o",
+    "swiftmodule": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/App~partial.swiftmodule",
+    "swift-dependencies": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/App.swiftdeps",
+    "diagnostics": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/App.dia"
+  },
+  "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/ContentView.swift": {
+    "object": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/ContentView.swift.o",
+    "swiftmodule": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/ContentView~partial.swiftmodule",
+    "swift-dependencies": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/ContentView.swiftdeps",
+    "diagnostics": "/Users/mikailsavas/Documents/GitHub/Local .Json Reader/.build/arm64-apple-macosx/release/JsonReader.build/ContentView.dia"
+  }
+}
