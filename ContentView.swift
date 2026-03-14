@@ -1,8 +1,17 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+enum ViewMode {
+    case tree, searchResults, textEditor
+}
+
+enum SortOrder {
+    case none, ascending, descending
+}
+
 struct ContentView: View {
     @State private var jsonData: Any? = nil
+    @State private var jsonText: String = ""
     @State private var showingFilePicker = false
     @State private var errorMessage: String? = nil
     @State private var showingError = false
@@ -11,10 +20,8 @@ struct ContentView: View {
     @State private var selectedPath: String? = nil
     @State private var matchingPaths = Set<String>()
     @State private var viewMode: ViewMode = .tree
-    
-    enum ViewMode {
-        case tree, searchResults
-    }
+    @State private var isEditing = false
+    @State private var sortOrder: SortOrder = .none
     
     var body: some View {
         VStack(spacing: 0) {
@@ -31,11 +38,31 @@ struct ContentView: View {
                 }
                 .buttonStyle(PlainButtonStyle())
                 Picker("View", selection: $viewMode) {
-                            Text("Tree").tag(ViewMode.tree)
-                            Text("Search Results").tag(ViewMode.searchResults)
+                    Text("Tree").tag(ViewMode.tree)
+                    Text("Search").tag(ViewMode.searchResults)
+                    Text("Editor").tag(ViewMode.textEditor)
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .frame(width: 250)
+                
+                if jsonData != nil && viewMode == .tree {
+                    HStack(spacing: 8) {
+                        Picker("Sort", selection: $sortOrder) {
+                            Text("None").tag(SortOrder.none)
+                            Text("A-Z").tag(SortOrder.ascending)
+                            Text("Z-A").tag(SortOrder.descending)
                         }
                         .pickerStyle(SegmentedPickerStyle())
-                        .frame(width: 200)
+                        .frame(width: 150)
+                        
+                        Button(action: {
+                            isEditing.toggle()
+                        }) {
+                            Label(isEditing ? "View" : "Edit", systemImage: isEditing ? "eye" : "pencil")
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
                         
                         
                 Spacer()
@@ -103,14 +130,22 @@ struct ContentView: View {
                                     searchQuery: searchQuery,
                                     expandedPaths: $expandedPaths,
                                     selectedPath: $selectedPath,
-                                    matchingPaths: matchingPaths
+                                    matchingPaths: matchingPaths,
+                                    sortOrder: sortOrder,
+                                    isEditing: isEditing
                                 )
                                 .padding(.horizontal)
-                            } else {
+                            } else if viewMode == .searchResults {
                                 SearchResultsView(
                                     data: data,
                                     searchQuery: searchQuery,
                                     selectedPath: $selectedPath
+                                )
+                                .padding(.horizontal)
+                            } else if viewMode == .textEditor {
+                                TextEditorView(
+                                    jsonText: $jsonText,
+                                    searchQuery: $searchQuery
                                 )
                                 .padding(.horizontal)
                             }
@@ -160,6 +195,7 @@ struct ContentView: View {
     private func loadJson(from url: URL) {
         do {
             let data = try Data(contentsOf: url)
+            jsonText = String(data: data, encoding: .utf8) ?? ""
             jsonData = try JSONSerialization.jsonObject(with: data)
             errorMessage = nil
             expandedPaths.removeAll()
@@ -452,12 +488,14 @@ struct JsonView: View {
     @Binding var expandedPaths: Set<String>
     @Binding var selectedPath: String?
     let matchingPaths: Set<String>
+    let sortOrder: SortOrder
+    let isEditing: Bool
     
     var body: some View {
         Group {
             if let dict = data as? [String: Any] {
                 VStack(alignment: .leading, spacing: 8) {
-                    ForEach(dict.keys.sorted(), id: \.self) { key in
+                    ForEach(sortedKeys(dict.keys), id: \.self) { key in
                         let itemPath = key
                         DisclosureGroup(
                             isExpanded: Binding(
@@ -476,7 +514,9 @@ struct JsonView: View {
                                 searchQuery: searchQuery,
                                 expandedPaths: $expandedPaths,
                                 selectedPath: $selectedPath,
-                                matchingPaths: matchingPaths
+                                matchingPaths: matchingPaths,
+                                sortOrder: sortOrder,
+                                isEditing: isEditing
                             )
                             .padding(.leading)
                         } label: {
@@ -524,7 +564,9 @@ struct JsonView: View {
                                 searchQuery: searchQuery,
                                 expandedPaths: $expandedPaths,
                                 selectedPath: $selectedPath,
-                                matchingPaths: matchingPaths
+                                matchingPaths: matchingPaths,
+                                sortOrder: sortOrder,
+                                isEditing: isEditing
                             )
                             .padding(.leading)
                         } label: {
@@ -555,6 +597,17 @@ struct JsonView: View {
             } else {
                 JsonValueDisplay(value: data, searchQuery: searchQuery)
             }
+        }
+    }
+    
+    private func sortedKeys(_ keys: Dictionary<String, Any>.Keys) -> [String] {
+        switch sortOrder {
+        case .none:
+            return Array(keys)
+        case .ascending:
+            return keys.sorted()
+        case .descending:
+            return keys.sorted().reversed()
         }
     }
     
@@ -771,8 +824,21 @@ struct JsonValueDisplay: View {
     var body: some View {
         Group {
             if let string = value as? String {
-                HighlightedText(text: "\"\(string)\"", searchQuery: searchQuery)
-                    .foregroundColor(.green)
+                if isMarkdown(string) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\"\(string)\"")
+                            .foregroundColor(.green)
+                            .font(.system(.body, design: .monospaced))
+                        Divider()
+                        MarkdownView(markdownText: string)
+                            .padding(.leading, 8)
+                            .background(Color(.controlBackgroundColor).opacity(0.5))
+                            .cornerRadius(4)
+                    }
+                } else {
+                    HighlightedText(text: "\"\(string)\"", searchQuery: searchQuery)
+                        .foregroundColor(.green)
+                }
             } else if let number = value as? NSNumber {
                 HighlightedText(text: "\(number)", searchQuery: searchQuery)
                     .foregroundColor(.blue)
@@ -788,6 +854,90 @@ struct JsonValueDisplay: View {
             }
         }
         .font(.system(.body, design: .monospaced))
+    }
+    
+    private func isMarkdown(_ text: String) -> Bool {
+        // Simple heuristic to detect markdown
+        let markdownPatterns = [
+            "^#",      // Headers
+            "\\*\\*",  // Bold
+            "_",       // Italic
+            "`",       // Code
+            "\\[.*\\]\\(.*\\)", // Links
+            "- ",      // Lists
+            "\\d+\\. " // Numbered lists
+        ]
+        
+        return markdownPatterns.contains { pattern in
+            text.range(of: pattern, options: .regularExpression) != nil
+        }
+    }
+}
+
+struct MarkdownView: View {
+    let markdownText: String
+    
+    var body: some View {
+        if let attributedString = try? AttributedString(markdown: markdownText) {
+            Text(attributedString)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            Text(markdownText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+struct TextEditorView: View {
+    @Binding var jsonText: String
+    @Binding var searchQuery: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("JSON Editor")
+                    .font(.headline)
+                Spacer()
+                Button(action: {
+                    // Format JSON
+                    if let data = jsonText.data(using: .utf8),
+                       let jsonObject = try? JSONSerialization.jsonObject(with: data),
+                       let formattedData = try? JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted),
+                       let formattedString = String(data: formattedData, encoding: .utf8) {
+                        jsonText = formattedString
+                    }
+                }) {
+                    Label("Format", systemImage: "text.alignleft")
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            .padding(.bottom, 8)
+            
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $jsonText)
+                    .font(.system(.body, design: .monospaced))
+                    .padding(8)
+                    .background(Color(.textBackgroundColor))
+                    .cornerRadius(8)
+                    .frame(minHeight: 400)
+                
+                if jsonText.isEmpty {
+                    Text("Enter JSON here...")
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 16)
+                        .allowsHitTesting(false)
+                }
+            }
+            
+            if !searchQuery.isEmpty {
+                Text("Search: \(searchQuery)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
+            }
+        }
     }
 }
 
